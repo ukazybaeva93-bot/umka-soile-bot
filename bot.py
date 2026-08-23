@@ -5,7 +5,7 @@ Umka men СӨЙЛЕ — Telegram-бот
 1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
 2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
-4. /stats — статистика пользователей для админа
+4. /stats — статистика пользователей (только для админа)
 
 Запуск: python3 bot.py
 Требуется переменная окружения BOT_TOKEN (токен от @BotFather)
@@ -40,6 +40,9 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "PASTE_YOUR_TOKEN_HERE")
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 LEADMAGNET_PATH = os.path.join(os.path.dirname(__file__), "20_phrases_leadmagnet.pdf")
+
+# ADMIN TELEGRAM ID
+ADMIN_ID = 720532587
 
 # ССЫЛКИ НА ОФЕРТУ И ОПЛАТУ
 OFERTA_URL = "https://docs.google.com/document/d/1S7fn8GOsMarOyeEOa54TM_Eu63cKLy9b5qIXUkGGMPc/edit?usp=sharing"
@@ -275,7 +278,10 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/stats — показать статистику подписчиков бота"""
+    """/stats — показать статистику бота (только для админа)"""
+    if update.effective_chat.id != ADMIN_ID:
+        return
+
     total, with_level, registered = get_user_stats()
     text = (
         "📊 <b>Статистика бота:</b>\n\n"
@@ -334,7 +340,6 @@ async def send_daily_drip(app: Application):
         if days_passed >= next_day and next_day in DRIP_MESSAGES:
             try:
                 text = DRIP_MESSAGES[next_day]
-                # Прикрепляем кнопки оплаты ко всем сообщениям рассылки
                 await app.bot.send_message(
                     chat_id, 
                     text, 
