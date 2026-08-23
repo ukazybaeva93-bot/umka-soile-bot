@@ -2,9 +2,9 @@
 """
 Umka men СӨЙЛЕ — Telegram-бот
 Функции:
-1. /start — приветствие + мгновенная выдача лид-магнита (PDF)
+1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
 2. Ежедневная drip-рассылка (боль → польза → соцдоказательство → срочность → цена)
-3. Выбор уровня A1/B1 и сбор заявки (имя + телефон) на курс
+3. Выбор уровня A1/B1, ссылка на оферту и сбор заявки/оплаты на курс
 
 Запуск: python3 bot.py
 Требуется переменная окружения BOT_TOKEN (токен от @BotFather)
@@ -39,6 +39,10 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "PASTE_YOUR_TOKEN_HERE")
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 LEADMAGNET_PATH = os.path.join(os.path.dirname(__file__), "20_phrases_leadmagnet.pdf")
+
+# ССЫЛКИ НА ОФЕРТУ И ОПЛАТУ
+OFERTA_URL = "https://docs.google.com/document/d/1S7fn8GOsMarOyeEOa54TM_Eu63cKLy9b5qIXUkGGMPc/edit?usp=drive_web"
+PAYMENT_URL = "https://pay.kaspi.kz/pay/kz_link_here"  # <-- Вставьте сюда вашу ссылку Kaspi / Freedom
 
 # ---------- БАЗА ДАННЫХ ----------
 
@@ -111,8 +115,6 @@ def bump_drip_day(chat_id, day):
 
 
 # ---------- ТЕКСТЫ DRIP-ЦЕПОЧКИ (по дням после /start) ----------
-# День 0 — сразу при /start (см. start_command)
-# Дни 1-6 — рассылаются планировщиком раз в день
 
 DRIP_MESSAGES = {
     1: (
@@ -158,7 +160,7 @@ DRIP_MESSAGES = {
     ),
 }
 
-FINAL_CTA_TEXT = "Орынды қазір бекіту үшін деңгейіңді таңда:"
+FINAL_CTA_TEXT = "Орынды қазір бекіту үшін деңгейіңді таңдаңыз немесе төлем жасаңыз:"
 
 
 # ---------- КЛАВИАТУРЫ ----------
@@ -167,6 +169,16 @@ def level_keyboard():
     keyboard = [
         [InlineKeyboardButton("A1 — жаңа бастаушымын", callback_data="level_A1")],
         [InlineKeyboardButton("B1 — сөйлей аламын, практика керек", callback_data="level_B1")],
+        [InlineKeyboardButton("💳 Төлем жасау (24 990 ₸)", url=PAYMENT_URL)],
+        [InlineKeyboardButton("📄 Жария оферта", url=OFERTA_URL)],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def main_menu_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("💳 Төлем жасау (24 990 ₸)", url=PAYMENT_URL)],
+        [InlineKeyboardButton("📄 Жария оферта шарты", url=OFERTA_URL)],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -204,8 +216,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Айтпақшы, өзіңді жақсырақ түсіну үшін сұрайын — қазір ағылшын тіліндегі "
-        "деңгейің қандай?",
+        "деңгейің қандай?\n\n"
+        "<i>Төлем жасамас бұрын Жария офертамен таныса аласыз.</i>",
         reply_markup=level_keyboard(),
+        parse_mode="HTML"
     )
 
 
@@ -220,15 +234,15 @@ async def level_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = (
             "Түсінікті! A1 деңгейінде — қазақ мұғалімімен, өз тіліңде қолдау "
             "алып, қорықпай жаттығасың. 💪\n\n"
-            "Келесі күндері саған курс туралы толығырақ жазамын."
+            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:"
         )
     else:
         reply = (
             "Керемет! B1 деңгейінде — шетелдік мұғаліммен нағыз тірі практика "
             "аласың. 🌍\n\n"
-            "Келесі күндері саған курс туралы толығырақ жазамын."
+            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:"
         )
-    await query.edit_message_text(reply)
+    await query.edit_message_text(reply, reply_markup=main_menu_keyboard())
 
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -253,9 +267,10 @@ async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
 
-    # свободный текст — просто вежливый ответ-заглушка
     await update.message.reply_text(
-        "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін 🙂"
+        "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін 🙂\n\n"
+        "Клубқа тіркелу немесе Офертаны қарау үшін төмендегі батырмаларды қолданыңыз:",
+        reply_markup=main_menu_keyboard()
     )
 
 
@@ -266,16 +281,16 @@ async def contact_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     set_contact(chat_id, phone=phone)
     await update.message.reply_text(
         "Тіркелдің! ✅ Жақын арада саған топ пен сабақ кестесі туралы жеке "
-        "жазамын. Қош келдің!",
-        reply_markup=ReplyKeyboardRemove(),
+        "жазамын. Қош келдің!\n\n"
+        "Төлемді төмендегі батырма арқылы жасай аласыз:",
+        reply_markup=main_menu_keyboard(),
     )
 
 
 # ---------- ПЛАНИРОВЩИК (ежедневная drip-рассылка) ----------
 
 async def send_daily_drip(app: Application):
-    """Вызывается планировщиком раз в день — рассылает следующее сообщение
-    каждому пользователю в зависимости от того, сколько дней прошло."""
+    """Вызывается планировщиком раз в день — рассылает следующее сообщение"""
     users = get_all_users_for_drip()
     now = datetime.utcnow()
 
@@ -318,7 +333,6 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_handler))
 
     scheduler = AsyncIOScheduler()
-    # Ежедневная рассылка в 11:00 по времени сервера — поменяй час при необходимости
     scheduler.add_job(send_daily_drip, "cron", hour=11, minute=0, args=[app])
     scheduler.start()
 
