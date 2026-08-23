@@ -4,7 +4,7 @@ Umka men СӨЙЛЕ — Telegram-бот
 Функции:
 1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
 2. Ежедневная drip-рассылка (боль → польза → соцдоказательство → срочность → цена)
-3. Выбор уровня A1/B1, ссылка на оферту и сбор заявки/оплаты на курс
+3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
 
 Запуск: python3 bot.py
 Требуется переменная окружения BOT_TOKEN (токен от @BotFather)
@@ -141,7 +141,7 @@ DRIP_MESSAGES = {
         "Таныстырамын: <b>Umka men СӨЙЛЕ</b> клубы.\n\n"
         "✅ Күнделікті грамматика — Telegram-чатта\n"
         "✅ Аптасына 2 рет тірі Speaking Club — Google Meet\n"
-        "✅ A1 деңгейі — қазақ мұғалімімен, өз тіліңде қолдау\n"
+        "✅ A1-A2 деңгейі — қазақ мұғалімімен, өз тіліңде қолдау\n"
         "✅ B1 деңгейі — шетелдік мұғаліммен, нағыз практика\n\n"
         "Қай деңгей саған жақын?"
     ),
@@ -167,7 +167,7 @@ FINAL_CTA_TEXT = "Орынды қазір бекіту үшін деңгейің
 
 def level_keyboard():
     keyboard = [
-        [InlineKeyboardButton("A1 — жаңа бастаушымын", callback_data="level_A1")],
+        [InlineKeyboardButton("A1-A2", callback_data="level_A1")],
         [InlineKeyboardButton("B1 — сөйлей аламын, практика керек", callback_data="level_B1")],
         [InlineKeyboardButton("💳 Төлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
         [InlineKeyboardButton("📄 Жария оферта", url=OFERTA_URL)],
@@ -227,12 +227,12 @@ async def level_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     chat_id = query.message.chat_id
-    level = "A1" if query.data == "level_A1" else "B1"
+    level = "A1-A2" if query.data == "level_A1" else "B1"
     set_level(chat_id, level)
 
-    if level == "A1":
+    if level == "A1-A2":
         reply = (
-            "Түсінікті! A1 деңгейінде — қазақ мұғалімімен, өз тіліңде қолдау "
+            "Түсінікті! A1-A2 деңгейінде — қазақ мұғалімімен, өз тіліңде қолдау "
             "алып, қорықпай жаттығасың. 💪\n\n"
             "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:"
         )
