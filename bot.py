@@ -5,7 +5,7 @@ Umka men СӨЙЛЕ — Telegram-бот
 1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
 2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
-4. /stats — статистика пользователей (только для админа)
+4. /stats — статистика пользователей (только для админа ID: 720532587)
 
 Запуск: python3 bot.py
 Требуется переменная окружения BOT_TOKEN (токен от @BotFather)
@@ -240,9 +240,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Айтпақшы, өзіңді жақсырақ түсіну үшін сұрайын — қазір ағылшын тіліндегі "
         "деңгейің қандай?\n\n"
-        "<i>Төлем жасамас бұрын Жария офертамен таныса аласыз.</i>",
+        "📌 <i>«Төлем жасау» батырмасын басу арқылы сіз <a href=\"" + OFERTA_URL + "\">Жария оферта шартымен</a> келісесіз.</i>",
         reply_markup=level_keyboard(),
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )
 
 
@@ -257,15 +258,17 @@ async def level_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = (
             "Түсінікті! A1-A2 деңгейінде — қазақ мұғалімімен, өз тіліңде қолдау "
             "алып, қорықпай жаттығасың. 💪\n\n"
-            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:"
+            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:\n"
+            "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
         )
     else:
         reply = (
             "Керемет! B1 деңгейінде — шетелдік мұғаліммен нағыз тірі практика "
             "аласың. 🌍\n\n"
-            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:"
+            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:\n"
+            "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
         )
-    await query.edit_message_text(reply, reply_markup=main_menu_keyboard())
+    await query.edit_message_text(reply, reply_markup=main_menu_keyboard(), parse_mode="HTML", disable_web_page_preview=True)
 
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -307,8 +310,11 @@ async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await update.message.reply_text(
         "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін 🙂\n\n"
-        "Клубқа тіркелу немесе Офертаны қарау үшін төмендегі батырмаларды қолданыңыз:",
-        reply_markup=main_menu_keyboard()
+        "Клубқа тіркелу немесе Офертаны қарау үшін төмендегі батырмаларды қолданыңыз:\n"
+        "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>",
+        reply_markup=main_menu_keyboard(),
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )
 
 
@@ -320,8 +326,11 @@ async def contact_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Тіркелдің! ✅ Жақын арада саған топ пен сабақ кестесі туралы жеке "
         "жазамын. Қош келдің!\n\n"
-        "Төлемді төмендегі батырма арқылы жасай аласыз:",
+        "Төлемді төмендегі батырма арқылы жасай аласыз:\n"
+        "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>",
         reply_markup=main_menu_keyboard(),
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )
 
 
@@ -339,12 +348,13 @@ async def send_daily_drip(app: Application):
         next_day = drip_day + 1
         if days_passed >= next_day and next_day in DRIP_MESSAGES:
             try:
-                text = DRIP_MESSAGES[next_day]
+                text = DRIP_MESSAGES[next_day] + "\n\n📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
                 await app.bot.send_message(
                     chat_id, 
                     text, 
                     parse_mode="HTML", 
-                    reply_markup=main_menu_keyboard()
+                    reply_markup=main_menu_keyboard(),
+                    disable_web_page_preview=True
                 )
                 bump_drip_day(chat_id, next_day)
                 logger.info(f"Отправлено drip-сообщение дня {next_day} пользователю {chat_id}")
