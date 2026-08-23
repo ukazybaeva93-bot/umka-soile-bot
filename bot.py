@@ -41,8 +41,8 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 LEADMAGNET_PATH = os.path.join(os.path.dirname(__file__), "20_phrases_leadmagnet.pdf")
 
 # ССЫЛКИ НА ОФЕРТУ И ОПЛАТУ
-OFERTA_URL = "https://docs.google.com/document/d/1S7fn8GOsMarOyeEOa54TM_Eu63cKLy9b5qIXUkGGMPc/edit?usp=drive_web"
-PAYMENT_URL = "https://pay.kaspi.kz/pay/kz_link_here"  # <-- Вставьте сюда вашу ссылку Kaspi / Freedom
+OFERTA_URL = "https://docs.google.com/document/d/1S7fn8GOsMarOyeEOa54TM_Eu63cKLy9b5qIXUkGGMPc/edit?usp=sharing"
+PAYMENT_URL = "https://pay.kaspi.kz/pay/3t1bdvs4"
 
 # ---------- БАЗА ДАННЫХ ----------
 
@@ -169,7 +169,7 @@ def level_keyboard():
     keyboard = [
         [InlineKeyboardButton("A1 — жаңа бастаушымын", callback_data="level_A1")],
         [InlineKeyboardButton("B1 — сөйлей аламын, практика керек", callback_data="level_B1")],
-        [InlineKeyboardButton("💳 Төлем жасау (24 990 ₸)", url=PAYMENT_URL)],
+        [InlineKeyboardButton("💳 Төлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
         [InlineKeyboardButton("📄 Жария оферта", url=OFERTA_URL)],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -177,7 +177,7 @@ def level_keyboard():
 
 def main_menu_keyboard():
     keyboard = [
-        [InlineKeyboardButton("💳 Төлем жасау (24 990 ₸)", url=PAYMENT_URL)],
+        [InlineKeyboardButton("💳 Төлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
         [InlineKeyboardButton("📄 Жария оферта шарты", url=OFERTA_URL)],
     ]
     return InlineKeyboardMarkup(keyboard)
