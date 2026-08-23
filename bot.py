@@ -3,8 +3,9 @@
 Umka men СӨЙЛЕ — Telegram-бот
 Функции:
 1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
-2. Ежедневная drip-рассылка (боль → польза → соцдоказательство → срочность → цена)
+2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
+4. /stats — статистика пользователей для админа
 
 Запуск: python3 bot.py
 Требуется переменная окружения BOT_TOKEN (токен от @BotFather)
@@ -114,6 +115,23 @@ def bump_drip_day(chat_id, day):
     conn.close()
 
 
+def get_user_stats():
+    """Статистика для админа."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM users")
+    total = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users WHERE level IS NOT NULL")
+    with_level = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users WHERE registered=1 OR phone IS NOT NULL")
+    registered = c.fetchone()[0]
+
+    conn.close()
+    return total, with_level, registered
+
+
 # ---------- ТЕКСТЫ DRIP-ЦЕПОЧКИ (по дням после /start) ----------
 
 DRIP_MESSAGES = {
@@ -122,20 +140,21 @@ DRIP_MESSAGES = {
         "Айтпақшы, байқадың ба — грамматиканы білу мен сөйлей алу екі бөлек нәрсе екенін?\n\n"
         "Көбіміз мектепте, университетте жылдар бойы ережелерді жаттаймыз. Бірақ "
         "нағыз әңгімеге тап болғанда — сөз таппай, үнсіз қаламыз.\n\n"
-        "Ертең осы туралы көбірек айтамын 👇"
+        "Клубқа қосылып, сөйлеуді бүгін бастауға болады 👇"
     ),
     2: (
         "Білесің бе, тіпті ағылшын тілі мұғалімдерінің өзі көбіне носительмен "
         "сөйлеуден қорқады.\n\n"
         "Себебі — оларды да аударуға үйреткен, сөйлеуге емес.\n\n"
-        "Мәселе сенде емес. Мәселе — практиканың жоқтығында."
+        "Мәселе сенде емес. Мәселе — практиканың жоқтығында.\n\n"
+        "Орныңды бекіту үшін төмендегі батырманы бас 👇"
     ),
     3: (
         "Соңғы бір апта ішінде маған көп адам жазды: \"қалайша тынымсыз үйреніп жүріп, "
         "сөйлей алмаймын?\"\n\n"
         "Сондықтан бір шешім дайындадым — грамматика + тірі сөйлеу практикасын "
         "біріктірген формат.\n\n"
-        "Толығырақ ертең айтамын 👀"
+        "Орынды қазір бекітуге болады 👇"
     ),
     4: (
         "Таныстырамын: <b>Umka men СӨЙЛЕ</b> клубы.\n\n"
@@ -143,14 +162,15 @@ DRIP_MESSAGES = {
         "✅ Аптасына 2 рет тірі Speaking Club — Google Meet\n"
         "✅ A1-A2 деңгейі — қазақ мұғалімімен, өз тіліңде қолдау\n"
         "✅ B1 деңгейі — шетелдік мұғаліммен, нағыз практика\n\n"
-        "Қай деңгей саған жақын?"
+        "Клубқа қосылу үшін төлемді қазір жасай аласыз 👇"
     ),
     5: (
         "Клубқа қосылғандар не дейді:\n\n"
         "\"Алғаш рет носительмен 5 минут үзіліссіз сөйлестім — бұрын мұндай болған "
         "емес еді\" — қатысушыдан пікір\n\n"
         "Орындар мұғалімнің кестесіне байланысты шектеулі. Топтар толықса, "
-        "келесі айға дейін күту керек болады."
+        "келесі айға дейін күту керек болады.\n\n"
+        "Қатысуды бекіту 👇"
     ),
     6: (
         "Соңғы күн еске салу 🔔\n\n"
@@ -254,6 +274,18 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["awaiting_name"] = True
 
 
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/stats — показать статистику подписчиков бота"""
+    total, with_level, registered = get_user_stats()
+    text = (
+        "📊 <b>Статистика бота:</b>\n\n"
+        f"👤 Всего зашли в бот: <b>{total}</b>\n"
+        f"🎯 Выбрали уровень (A1-A2/B1): <b>{with_level}</b>\n"
+        f"📱 Оставили контакты / заявку: <b>{registered}</b>"
+    )
+    await update.message.reply_text(text, parse_mode="HTML")
+
+
 async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
 
@@ -302,13 +334,13 @@ async def send_daily_drip(app: Application):
         if days_passed >= next_day and next_day in DRIP_MESSAGES:
             try:
                 text = DRIP_MESSAGES[next_day]
-                if next_day == 6:
-                    await app.bot.send_message(chat_id, text, parse_mode="HTML")
-                    await app.bot.send_message(
-                        chat_id, FINAL_CTA_TEXT, reply_markup=level_keyboard()
-                    )
-                else:
-                    await app.bot.send_message(chat_id, text, parse_mode="HTML")
+                # Прикрепляем кнопки оплаты ко всем сообщениям рассылки
+                await app.bot.send_message(
+                    chat_id, 
+                    text, 
+                    parse_mode="HTML", 
+                    reply_markup=main_menu_keyboard()
+                )
                 bump_drip_day(chat_id, next_day)
                 logger.info(f"Отправлено drip-сообщение дня {next_day} пользователю {chat_id}")
             except Exception as e:
@@ -328,6 +360,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("join", register_command))
+    app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CallbackQueryHandler(level_callback, pattern="^level_"))
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_handler))
