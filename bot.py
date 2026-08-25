@@ -2,7 +2,7 @@
 """
 Umka men СӨЙЛЕ — Telegram-бот
 Функции:
-1. /start — приветствие + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
+1. /start — приветствие с ценой + мгновенная выдача лид-магнита (PDF) + кнопки Оплаты и Оферты
 2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
 4. /stats — статистика пользователей (только для админа ID: 720532587)
@@ -47,6 +47,9 @@ ADMIN_ID = 720532587
 # ССЫЛКИ НА ОФЕРТУ И ОПЛАТУ
 OFERTA_URL = "https://docs.google.com/document/d/1S7fn8GOsMarOyeEOa54TM_Eu63cKLy9b5qIXUkGGMPc/edit?usp=sharing"
 PAYMENT_URL = "https://pay.kaspi.kz/pay/3t1bdvs4"
+
+# ЦЕНА КУРСА — меняешь один раз здесь, обновится везде в боте
+COURSE_PRICE = "24 990 ₸"
 
 # ---------- БАЗА ДАННЫХ ----------
 
@@ -143,28 +146,29 @@ DRIP_MESSAGES = {
         "Айтпақшы, байқадың ба — грамматиканы білу мен сөйлей алу екі бөлек нәрсе екенін?\n\n"
         "Көбіміз мектепте, университетте жылдар бойы ережелерді жаттаймыз. Бірақ "
         "нағыз әңгімеге тап болғанда — сөз таппай, үнсіз қаламыз.\n\n"
-        "Клубқа қосылып, сөйлеуді бүгін бастауға болады 👇"
+        f"Клубқа қосылып, сөйлеуді бүгін бастауға болады — {COURSE_PRICE} 👇"
     ),
     2: (
         "Білесің бе, тіпті ағылшын тілі мұғалімдерінің өзі көбіне носительмен "
         "сөйлеуден қорқады.\n\n"
         "Себебі — оларды да аударуға үйреткен, сөйлеуге емес.\n\n"
         "Мәселе сенде емес. Мәселе — практиканың жоқтығында.\n\n"
-        "Орныңды бекіту үшін төмендегі батырманы бас 👇"
+        f"Орныңды {COURSE_PRICE}-ге бекіту үшін төмендегі батырманы бас 👇"
     ),
     3: (
         "Соңғы бір апта ішінде маған көп адам жазды: \"қалайша тынымсыз үйреніп жүріп, "
         "сөйлей алмаймын?\"\n\n"
         "Сондықтан бір шешім дайындадым — грамматика + тірі сөйлеу практикасын "
         "біріктірген формат.\n\n"
-        "Орынды қазір бекітуге болады 👇"
+        f"Орынды қазір {COURSE_PRICE}-ге бекітуге болады 👇"
     ),
     4: (
         "Таныстырамын: <b>Umka men СӨЙЛЕ</b> клубы.\n\n"
         "✅ Күнделікті грамматика — Telegram-чатта\n"
         "✅ Аптасына 2 рет тірі Speaking Club — Google Meet\n"
         "✅ A1-A2 деңгейі — қазақ мұғалімімен, өз тіліңде қолдау\n"
-        "✅ B1 деңгейі — шетелдік мұғаліммен, нағыз практика\n\n"
+        "✅ B1 деңгейі — шетелдік мұғаліммен, нағыз практика\n"
+        f"💰 Бағасы: {COURSE_PRICE} / айына\n\n"
         "Клубқа қосылу үшін төлемді қазір жасай аласыз 👇"
     ),
     5: (
@@ -173,11 +177,11 @@ DRIP_MESSAGES = {
         "емес еді\" — қатысушыдан пікір\n\n"
         "Орындар мұғалімнің кестесіне байланысты шектеулі. Топтар толықса, "
         "келесі айға дейін күту керек болады.\n\n"
-        "Қатысуды бекіту 👇"
+        f"Қатысуды {COURSE_PRICE}-ге бекіту 👇"
     ),
     6: (
         "Соңғы күн еске салу 🔔\n\n"
-        "<b>Umka men СӨЙЛЕ</b> — 24 990 ₸ / айына\n"
+        f"<b>Umka men СӨЙЛЕ</b> — {COURSE_PRICE} / айына\n"
         "Күнделікті грамматика + 8 тірі speaking club кездесуі\n\n"
         "Орныңды қазір бекіт — төменде батырманы бас 👇"
     ),
@@ -192,7 +196,7 @@ def level_keyboard():
     keyboard = [
         [InlineKeyboardButton("A1-A2", callback_data="level_A1")],
         [InlineKeyboardButton("B1 — сөйлей аламын, практика керек", callback_data="level_B1")],
-        [InlineKeyboardButton("💳 Төлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
+        [InlineKeyboardButton(f"💳 {COURSE_PRICE} — Tөлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
         [InlineKeyboardButton("📄 Жария оферта", url=OFERTA_URL)],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -200,7 +204,7 @@ def level_keyboard():
 
 def main_menu_keyboard():
     keyboard = [
-        [InlineKeyboardButton("💳 Төлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
+        [InlineKeyboardButton(f"💳 {COURSE_PRICE} — Tөлем жасау (Kaspi Pay)", url=PAYMENT_URL)],
         [InlineKeyboardButton("📄 Жария оферта шарты", url=OFERTA_URL)],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -225,6 +229,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• 🎙 Дұрыс дыбыстау мен айтылым сырлары (произношение)\n"
         "• 💡 Формуласыз, жеңіл грамматика\n"
         "• 🗣 Носительдердің шынайы өмірде қолданатын фразалары\n\n"
+        f"📚 <b>Umka men СӨЙЛЕ</b> клубы — {COURSE_PRICE} / айына. Күнделікті "
+        "грамматика + аптасына 2 рет тірі Speaking Club (A1-A2 немесе B1 деңгейінде).\n\n"
         "Эфирдеміз! Келесі микро-сабақ ертең дәл осы уақытта келеді. Keep in touch! 🚀"
     )
     await update.message.reply_text(welcome, parse_mode="HTML")
@@ -241,12 +247,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("(гайд файлы табылмады, кейінірек жіберемін)")
 
     await update.message.reply_text(
-        "Айтпақшы, өзіңді жақсырақ түсіну үшін сұрайын — қазір ағылшын тіліндегі "
-        "деңгейің қандай?\n\n"
-        "📌 <i>«Төлем жасау» батырмасын басу арқылы сіз <a href=\"" + OFERTA_URL + "\">Жария оферта шартымен</a> келісесіз.</i>",
+        "Деңгейіңді таңда немесе төлемді қазір жаса:",
         reply_markup=level_keyboard(),
-        parse_mode="HTML",
-        disable_web_page_preview=True
     )
 
 
@@ -254,48 +256,58 @@ async def level_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     chat_id = query.message.chat_id
-    level = "A1-A2" if query.data == "level_A1" else "B1"
+    level = "A1" if query.data == "level_A1" else "B1"
     set_level(chat_id, level)
 
-    if level == "A1-A2":
+    if level == "A1":
         reply = (
             "Түсінікті! A1-A2 деңгейінде — қазақ мұғалімімен, өз тіліңде қолдау "
-            "алып, қорықпай жаттығасың. 💪\n\n"
-            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:\n"
-            "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
+            "алып, қорықпай жаттығасың. 💪"
         )
     else:
         reply = (
             "Керемет! B1 деңгейінде — шетелдік мұғаліммен нағыз тірі практика "
-            "аласың. 🌍\n\n"
-            "Клубқа қатысу үшін төмендегі батырма арқылы төлем жасай аласыз:\n"
-            "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
+            "аласың. 🌍"
         )
-    await query.edit_message_text(reply, reply_markup=main_menu_keyboard(), parse_mode="HTML", disable_web_page_preview=True)
+
+    course_info = (
+        "📚 <b>Umka men СӨЙЛЕ — қысқаша</b>\n\n"
+        "✅ Күнделікті грамматика — Telegram-чатта\n"
+        "✅ Аптасына 2 рет тірі Speaking Club\n"
+        f"✅ Сенің деңгейің: <b>{level}</b>\n"
+        f"💰 Бағасы: {COURSE_PRICE} / айына\n\n"
+        "Төлемді немесе офертаны төмендегі батырмалардан аша аласың:"
+    )
+
+    await query.edit_message_text(reply)
+    await context.bot.send_message(
+        chat_id, course_info, parse_mode="HTML", reply_markup=main_menu_keyboard()
+    )
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/stats — статистика только для админа"""
+    user_id = update.effective_user.id
+    if user_id != ADMIN_ID:
+        return
+
+    total, with_level, registered = get_user_stats()
+    text = (
+        "📊 Статистика бота:\n\n"
+        f"👤 Всего зашли в бот: {total}\n"
+        f"🎯 Выбрали уровень (A1-A2/B1): {with_level}\n"
+        f"📱 Оставили контакты / заявку: {registered}"
+    )
+    await update.message.reply_text(text)
 
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/join — начать оформление заявки на курс"""
+    """/join — начать оформление заявки на курс (текстом, запасной вариант)"""
     await update.message.reply_text(
         "Тамаша! Орынды бекіту үшін атыңды жаз (тек аты жеткілікті):",
         reply_markup=ReplyKeyboardRemove(),
     )
     context.user_data["awaiting_name"] = True
-
-
-async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/stats — показать статистику бота (только для админа)"""
-    if update.effective_chat.id != ADMIN_ID:
-        return
-
-    total, with_level, registered = get_user_stats()
-    text = (
-        "📊 <b>Статистика бота:</b>\n\n"
-        f"👤 Всего зашли в бот: <b>{total}</b>\n"
-        f"🎯 Выбрали уровень (A1-A2/B1): <b>{with_level}</b>\n"
-        f"📱 Оставили контакты / заявку: <b>{registered}</b>"
-    )
-    await update.message.reply_text(text, parse_mode="HTML")
 
 
 async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -312,12 +324,7 @@ async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     await update.message.reply_text(
-        "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін 🙂\n\n"
-        "Клубқа тіркелу немесе Офертаны қарау үшін төмендегі батырмаларды қолданыңыз:\n"
-        "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>",
-        reply_markup=main_menu_keyboard(),
-        parse_mode="HTML",
-        disable_web_page_preview=True
+        "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін 🙂"
     )
 
 
@@ -328,19 +335,15 @@ async def contact_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     set_contact(chat_id, phone=phone)
     await update.message.reply_text(
         "Тіркелдің! ✅ Жақын арада саған топ пен сабақ кестесі туралы жеке "
-        "жазамын. Қош келдің!\n\n"
-        "Төлемді төмендегі батырма арқылы жасай аласыз:\n"
-        "📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>",
-        reply_markup=main_menu_keyboard(),
-        parse_mode="HTML",
-        disable_web_page_preview=True
+        "жазамын. Қош келдің!",
+        reply_markup=ReplyKeyboardRemove(),
     )
 
 
 # ---------- ПЛАНИРОВЩИК (ежедневная drip-рассылка) ----------
 
 async def send_daily_drip(app: Application):
-    """Вызывается планировщиком раз в день — рассылает следующее сообщение"""
+    """Раз в день рассылает следующее сообщение цепочки с кнопкой оплаты."""
     users = get_all_users_for_drip()
     now = datetime.utcnow()
 
@@ -351,16 +354,12 @@ async def send_daily_drip(app: Application):
         next_day = drip_day + 1
         if days_passed >= next_day and next_day in DRIP_MESSAGES:
             try:
-                text = DRIP_MESSAGES[next_day] + "\n\n📌 <i>Төлем жасау арқылы <a href=\"" + OFERTA_URL + "\">Жария оферта шартын</a> қабылдайсыз.</i>"
+                text = DRIP_MESSAGES[next_day]
                 await app.bot.send_message(
-                    chat_id, 
-                    text, 
-                    parse_mode="HTML", 
-                    reply_markup=main_menu_keyboard(),
-                    disable_web_page_preview=True
+                    chat_id, text, parse_mode="HTML", reply_markup=level_keyboard()
                 )
                 bump_drip_day(chat_id, next_day)
-                logger.info(f"Отправлено drip-сообщение дня {next_day} пользователю {chat_id}")
+                logger.info(f"Отправлено сообщение дня {next_day} пользователю {chat_id}")
             except Exception as e:
                 logger.warning(f"Не удалось отправить сообщение {chat_id}: {e}")
 
@@ -384,6 +383,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_handler))
 
     scheduler = AsyncIOScheduler()
+    # Ежедневная рассылка в 11:00 по времени сервера — поменяй час при необходимости
     scheduler.add_job(send_daily_drip, "cron", hour=11, minute=0, args=[app])
     scheduler.start()
 
