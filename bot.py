@@ -2,11 +2,11 @@
 """
 Umka men СӨЙЛЕ — Telegram-бот
 Функции:
-1. /start [soyle|phrases] — приветствие с авто-определением лид-магнита (10 техник / 20 фраз)
+1. /start [soyle|phrases|c1] — приветствие с авто-определением лид-магнита
 2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
 4. /stats — статистика пользователей (только для админа ID: 720532587)
-5. Выдача PDF-гайда "Mastering B2 & C1 Grammar" по ключевым словам
+5. Выдача PDF-гайда "Mastering B2 & C1 Grammar" по ключевым словам и ссылке ?start=c1
 """
 
 import logging
@@ -287,6 +287,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     key = args[0].lower() if args else "soyle"
 
+    # 1. СӨЙЛЕ ВОРОНКАСЫ (10 ТЕХНИКА)
     if key == "soyle":
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
@@ -317,6 +318,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("(гайд файлы табылмады)")
 
+    # 2. ФРАЗА ВОРОНКАСЫ (20 ФРАЗА)
     elif key == "phrases":
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
@@ -337,6 +339,29 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("(гайд файлы табылмады)")
 
+    # 3. B2/C1 ГАЙДЫ СІЛТЕМЕСІ (https://t.me/umka_soile_bot?start=c1)
+    elif key in ["c1", "b2", "guide", "grammar", "мастеринг"]:
+        welcome = (
+            "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
+            "<b>«Mastering B2 & C1 Grammar» гайдыңды жүктеп ал! 🎁</b>\n\n"
+            f"📚 <b>Umka men СӨЙЛЕ</b> клубы — {COURSE_PRICE} / айына.\n\n"
+            "Эфирдеміз! Келесі микро-сабақ ертең келеді. Keep in touch! 🚀"
+        )
+        await update.message.reply_text(welcome, parse_mode="HTML")
+
+        if os.path.exists(LEADMAGNET_B2_C1):
+            with open(LEADMAGNET_B2_C1, "rb") as f:
+                await context.bot.send_document(
+                    chat_id=chat_id,
+                    document=f,
+                    filename="Umka_Mastering_B2_C1_Grammar.pdf",
+                    caption="📘 <b>Mastering B2 & C1 Grammar</b> гайды! 🎁",
+                    parse_mode="HTML",
+                )
+        else:
+            await update.message.reply_text(B2_C1_TEXT, parse_mode="HTML")
+
+    # 4. МЕТКАСЫЗ ТҮСКЕНДЕРГЕ
     else:
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
