@@ -37,7 +37,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "PASTE_YOUR_TOKEN_HERE")
-DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+
+# Путь к базе данных на постоянном монтируемом диске Railway (/data)
+DB_PATH = "/data/users.db"
 
 # ЕКІ ЛИД-МАГНИТТІҢ ЖОЛЫ
 LEADMAGNET_10_TECHNIQUES = os.path.join(
@@ -62,6 +64,9 @@ COURSE_PRICE = "24 990 ₸"
 
 
 def init_db():
+    # Автоматически создаем директорию /data, если она не существует
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
