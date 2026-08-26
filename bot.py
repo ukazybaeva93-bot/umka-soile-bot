@@ -6,6 +6,7 @@ Umka men СӨЙЛЕ — Telegram-бот
 2. Ежедневная drip-рассылка с кнопкой оплаты на каждый день
 3. Выбор уровня A1-A2/B1, ссылка на оферту и сбор заявки/оплаты на курс
 4. /stats — статистика пользователей (только для админа ID: 720532587)
+5. Выдача PDF-гайда "Mastering B2 & C1 Grammar" по ключевым словам
 """
 
 import logging
@@ -43,12 +44,15 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "PASTE_YOUR_TOKEN_HERE")
 # =========================================================
 DB_PATH = "/data/users.db"
 
-# ЕКІ ЛИД-МАГНИТТІҢ ЖОЛЫ
+# ЛИД-МАГНИТТЕР ЖОЛЫ
 LEADMAGNET_10_TECHNIQUES = os.path.join(
     os.path.dirname(__file__), "10_techniques_speaking_english_v3.pdf"
 )
 LEADMAGNET_20_PHRASES = os.path.join(
     os.path.dirname(__file__), "20_phrases_leadmagnet.pdf"
+)
+LEADMAGNET_B2_C1 = os.path.join(
+    os.path.dirname(__file__), "Umka_Mastering_B2_C1_Grammar.pdf"
 )
 
 # ADMIN TELEGRAM ID
@@ -61,12 +65,40 @@ PAYMENT_URL = "https://pay.kaspi.kz/pay/3t1bdvs4"
 # ЦЕНА КУРСА
 COURSE_PRICE = "24 990 ₸"
 
+# КІЛТ СӨЗДЕР ТІЗІМІ (B2/C1 ГАЙДЫ ҮШІН)
+KEYWORDS_B2_C1 = ["гайд", "b2", "c1", "грамматика", "grammar", "guide", "мастеринг"]
+
+# B2/C1 ТЕКСТІК РЕЗЕРВІ (ФАЙЛ СЕРВЕРДЕ ТАБЫЛМАЙ ҚАЛСА)
+B2_C1_TEXT = (
+    "✨ <b>MASTERING B2 & C1: Ағылшын тіліндегі 5 күрделі грамматикалық конструкция</b>\n\n"
+    "1️⃣ <b>Inversion (Сөз кезегін төңкеру)</b>\n"
+    "❌ <i>Hardly I had entered the room when the phone rang.</i>\n"
+    "✅ <b>Hardly had I entered the room when the phone rang.</b>\n"
+    "<i>(Бөлмеге кіре бергенім сол еді, телефон шырылдап қоя берді.)</i>\n\n"
+    "2️⃣ <b>Mixed Conditionals (Аралас шартты сөйлемдер)</b>\n"
+    "❌ <i>If I studied harder, I would have a good job now.</i>\n"
+    "✅ <b>If I had studied harder at university, I would have a good job now.</b>\n"
+    "<i>(Егер университетте жақсырақ оқығанымда, қазір жақсы жұмысым болар еді.)</i>\n\n"
+    "3️⃣ <b>Perfect Passive Participle</b>\n"
+    "❌ <i>After the car was repaired, we left.</i>\n"
+    "✅ <b>Having been repaired, the car was ready for the trip.</b>\n"
+    "<i>(Көлік жөнделіп болған соң, жолға дайын болды.)</i>\n\n"
+    "4️⃣ <b>Subjunctive Mood (Пәрменді/тілек рай)</b>\n"
+    "❌ <i>She insisted that he goes with her.</i>\n"
+    "✅ <b>She insisted that he go with her.</b>\n"
+    "<i>(Ол оның өзімен бірге баруын талап етті.)</i>\n\n"
+    "5️⃣ <b>Cleft Sentences (Ойды бөліп көрсету)</b>\n"
+    "❌ <i>I just need some rest.</i>\n"
+    "✅ <b>What I really need is some rest.</b>\n"
+    "<i>(Маған қазір шын мәнінде керегі — сәл демалыс.)</i>\n\n"
+    "© 2026 Umka men СӨЙЛЕ"
+)
+
 
 # ---------- БАЗА ДАННЫХ ----------
 
 
 def init_db():
-    # Автоматически создаем директорию /data на случай, если диск только подключили
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     
     conn = sqlite3.connect(DB_PATH)
@@ -252,11 +284,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     upsert_user(chat_id)
 
-    # Telegram арқылы келген метканы анықтау (soyle немесе phrases)
     args = context.args
     key = args[0].lower() if args else "soyle"
 
-    # 1. СӨЙЛЕ ВОРОНКАСЫ (10 ТЕХНИКА)
     if key == "soyle":
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
@@ -287,7 +317,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("(гайд файлы табылмады)")
 
-    # 2. ФРАЗА ВОРОНКАСЫ (20 ФРАЗА)
     elif key == "phrases":
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
@@ -308,7 +337,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("(гайд файлы табылмады)")
 
-    # 3. МЕТКАСЫЗ ТҮСКЕНДЕРГЕ
     else:
         welcome = (
             "Сәлем! 👋 Umka men СӨЙЛЕ клубына қош келдің.\n\n"
@@ -383,7 +411,12 @@ async def text_message_handler(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     chat_id = update.effective_chat.id
+    text = update.message.text.strip().lower()
 
+    # Пайдаланушы базада бар ма, тексереміз / сақтаймыз
+    upsert_user(chat_id)
+
+    # 1. Егер пайдаланушы есімін жазып жатса
     if context.user_data.get("awaiting_name"):
         name = update.message.text.strip()
         set_contact(chat_id, name=name)
@@ -395,6 +428,21 @@ async def text_message_handler(
         )
         return
 
+    # 2. Кілт сөздерді тексеру (B2 / C1 Гайд)
+    if any(keyword in text for keyword in KEYWORDS_B2_C1):
+        if os.path.exists(LEADMAGNET_B2_C1):
+            with open(LEADMAGNET_B2_C1, "rb") as f:
+                await update.message.reply_document(
+                    document=f,
+                    filename="Umka_Mastering_B2_C1_Grammar.pdf",
+                    caption="📘 <b>Mastering B2 & C1 Grammar</b> гайды! 🎁",
+                    parse_mode="HTML",
+                )
+        else:
+            await update.message.reply_text(B2_C1_TEXT, parse_mode="HTML")
+        return
+
+    # 3. Басқа әдепкі жауап
     await update.message.reply_text(
         "Хабарламаңды алдым! Сұрағың болса, тікелей осында жаз — жауап беремін"
         " 🙂"
